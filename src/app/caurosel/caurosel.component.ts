@@ -21,6 +21,8 @@ export class CauroselComponent implements OnInit {
       4
   ];
 
+  stop = false;
+
   constructor() {
     this.display = this.initView();
   }
@@ -28,6 +30,13 @@ export class CauroselComponent implements OnInit {
   ngOnInit(): void {
   }
 
+
+  sss(){
+    this.stop = !this.stop;
+    if(!this.stop) {
+      this.test();
+    }
+  }
 
   test() {
     const max = this.slides.length;
@@ -58,7 +67,9 @@ export class CauroselComponent implements OnInit {
     of([]).pipe(
         delay(1)
     ).subscribe(() => {
-      this.test();
+      if(!this.stop) {
+        this.test();
+      }
     });
     console.log($event);
   }

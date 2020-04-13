@@ -1,4 +1,6 @@
+{{this.display}}
 <button (click)="test()">test</button>
+<button (click)="sss()">stop</button>
 <div class="carousel" [@CarouselAnimation]="display" (@CarouselAnimation.done)="animateDone($event)">
     <ng-container *ngFor="let slide of slides; index as i">
         <div class="div" *ngIf="checkInArray(display, i)" [ngStyle]="{'order': getOrder(display, i), 'left': 25 * getOrder(display, i) + '%'}">{{slide}}</div>
