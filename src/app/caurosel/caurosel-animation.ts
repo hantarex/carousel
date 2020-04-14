@@ -32,3 +32,13 @@ export const CarouselAnimation1 =
             ],{ optional: true }),
         ]),
     ]);
+
+export const testAnimation =
+    trigger('testAnimation', [
+        transition('* => *', [
+            animate('1s', keyframes([
+                    style({left: "{{left}}%"}),
+                ])
+            )
+        ]),
+    ]);
