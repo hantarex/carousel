@@ -7,6 +7,7 @@ const routes: Routes = [
     { path: 'carousel2', loadChildren: () => import('./carousel1/carousel1.module').then(m => m.Carousel1Module) },
     { path: 'carousel3', loadChildren: () => import('./carousel2/carousel2.module').then(m => m.Carousel2Module) },
     { path: 'carousel4', loadChildren: () => import('./carousel3/carousel3.module').then(m => m.Carousel3Module) },
+    { path: 'carousel5', loadChildren: () => import('./carousel4/carousel4.module').then(m => m.Carousel4Module) },
   ];
 
 @NgModule({
