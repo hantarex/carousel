@@ -2,13 +2,14 @@
 <button (click)="stop()">stop</button>
 <button (click)="start()">start</button>
 <div #container class="carousel">
-    <div class="set" [ngStyle]="{'left': (carouselLength -1) / 2 * (widthStep + 100) + 'px'}"></div>
-    <div class="batch" *ngFor="let carousel of carouselBatch; trackBy: trackBy; index as i; let last = last" [ngStyle]="{'left': -i * (width + widthStep) + 'px'}">
+    <div class="set" [ngStyle]="{'left': (carouselLength -1) / 2 * (widthStep + 100) + 'px'}">{{currentValue}}</div>
+    <div class="batch" *ngFor="let carousel of carouselBatch$ | async; index as i;" [ngStyle]="{'left': -i * (width + widthStep) + 'px'}">
         <div *ngFor="let slide of carousel" class="div" [ngStyle]="{'left': slide.position + 'px'}">
             {{slide.val}}
         </div>
-        <ng-container *ngIf="last">{{animate()}}</ng-container>
+        {{log()}}
     </div>
+<!--    {{animate()}}-->
 </div>
 
 <!--<button (click)="testRun(test)">test</button>-->

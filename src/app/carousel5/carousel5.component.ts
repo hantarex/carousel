@@ -1,6 +1,5 @@
 import {ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {Observable, of, throwError} from "rxjs";
-import {concatMap, delay, flatMap, retry} from "rxjs/operators";
+import {BehaviorSubject, Observable, of, throwError} from "rxjs";
 import {testAnimation} from "../caurosel/caurosel-animation";
 import {Linear, TimelineMax} from "gsap";
 interface Carousel {
@@ -25,14 +24,15 @@ export class Carousel5Component implements OnInit {
   ];
   tl: TimelineMax;
   offset = 300; // Длинна карусели
-  carouselLength = 9; // кол-во элементов
+  carouselLength = 4; // кол-во элементов
+  currentValue = null;
   stepMax = 30;
-  speed = 4;
+  speed = 6;
   step = this.stepMax;
   when_certain_condition = false;
   forcePosition$: Observable<null>;
   carousel: Carousel[] = [];
-  carouselBatch: Carousel[][] = [];
+  carouselBatch$ = new BehaviorSubject<Carousel[][]>([]);
   stop$: Observable<null>;
   width: number;
   widthStep: number;
@@ -53,8 +53,17 @@ export class Carousel5Component implements OnInit {
         position: (100 + this.widthStep) * i,
       });
     }
+
     for(let i = 0; i < 2; i++){
-      this.carouselBatch.push(this.carousel);
+      // let c = this.carousel.map((val, index) => {
+      //   val.val = this.carousel[(index + i) % this.carousel.length].val;
+      //   return {...val};
+      // });
+      // console.log(c);
+      this.carouselBatch$.next([
+        ...this.carouselBatch$.value,
+        [...this.carousel]
+      ]);
     }
 
     // this.tl.addLabel('val' + (this.carousel[(this.carousel.length - 1) / 2]), 0);
@@ -62,18 +71,16 @@ export class Carousel5Component implements OnInit {
     // this.tl.addLabel('val2', 0.3);
     // this.tl.addLabel('val3', 0.6);
     // this.tl.addLabel('val4', 1);
-    for (let i = 0; i < this.carousel.length; i++ ){
-      this.tl.addLabel('run' + i, this.speed / this.carousel.length * i);
-    }
-    //
     // for (let i = 0; i < this.carousel.length; i++ ){
-    //   this.tl.addCallback(() => {}, 0);
+    //   this.tl.addLabel('run' + i, this.speed / this.carousel.length * i);
+    // }
+    // //
+    // for (let i = 0; i < this.carousel.length; i++ ){
+    //   this.tl.call(() => {
+    //     console.log("aa");
+    //   }, [], 'run' + i);
     // }
 
-  }
-
-  currentValue(value: any){
-    console.log(value);
   }
 
   reCalcCarousel(){
@@ -93,46 +100,46 @@ export class Carousel5Component implements OnInit {
 
   ngOnInit(): void {
     this.init();
-    this.forcePosition$ = of([]).pipe(
-        concatMap( item => of(item).pipe ( delay( 1000 ) )),
-        flatMap(v => {
-          // this.reCalcCarousel();
-          this.animate(this.widthStep + 100);
-          if (!this.when_certain_condition) {
-            return throwError('retry');
-          } else {
-            return null;
-          }
-        }),
-        // retry(),
-    );
-  }
-
-  trackBy(index, item: Carousel){
-    return item.val;
+    // this.forcePosition$ = of([]).pipe(
+    //     concatMap( item => of(item).pipe ( delay( 1000 ) )),
+    //     flatMap(v => {
+    //       // this.reCalcCarousel();
+    //       this.animate(this.widthStep + 100);
+    //       if (!this.when_certain_condition) {
+    //         return throwError('retry');
+    //       } else {
+    //         return null;
+    //       }
+    //     }),
+    //     // retry(),
+    // );
   }
 
   stop() {
-    this.tl.add(() => {
-      console.log("val1")
-    }, "val1");
-    this.tl.add(() => {
-      console.log("val2")
-    }, "val2");
-    this.tl.add(() => {
-      console.log("val3")
-    }, "val3");
-    this.tl.add(() => {
-      console.log("val4")
-    }, "val4");
+    // this.tl.add(() => {
+    //   console.log("val1")
+    // }, "val1");
+    // this.tl.add(() => {
+    //   console.log("val2")
+    // }, "val2");
+    // this.tl.add(() => {
+    //   console.log("val3")
+    // }, "val3");
+    // this.tl.add(() => {
+    //   console.log("val4")
+    // }, "val4");
   }
 
   start() {
     this.tl.timeScale(this.tl.timeScale() + 0.1);
   }
 
+  trackBy(index, item){
+    return index;
+  }
 
   animate(position = this.widthStep + 100) {
+    console.log("anim");
     let menuItems = this.container.nativeElement.querySelectorAll(".batch");
 
     this.tl.set(menuItems[0], {x: 0});
@@ -144,11 +151,28 @@ export class Carousel5Component implements OnInit {
     this.tl.set(menuItems[0], {x: - (this.width + this.widthStep)}, '-=' + this.speed);
     this.tl.to(menuItems[0], this.speed, {display: 'block', x:  0, ease: Linear.easeNone}, '-=' + this.speed);
 
+    for (let i = 0; i < this.carousel.length * 2; i++ ){
+      this.tl.call(() => {
+        this.currentValue = this.carousel[i % this.carousel.length].val;
+        console.log(this.carousel[i % this.carousel.length]);
+      }, [],  this.speed / this.carousel.length * i);
+    }
+    //
+    // for (let i = 0; i < this.carousel.length; i++ ){
+    //   this.tl.call(() => {
+    //     console.log("aa");
+    //   }, [], 'run' + i);
+    // }
+
   }
 
   testRun(test: HTMLDivElement) {
     // TweenLite.to(test, 1, {x: 100});
     let tl = new TimelineMax({delay:0.5, repeat:3, repeatDelay:2});
     tl.to([test], 1, {x:250})
+  }
+
+  log() {
+    console.log("log");
   }
 }
