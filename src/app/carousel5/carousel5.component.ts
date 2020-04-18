@@ -20,11 +20,11 @@ export class Carousel5Component implements OnInit {
     0,
     1,
     2,
-    3
+    3,
   ];
   tl: TimelineMax;
   offset = 300; // Длинна карусели
-  carouselLength = 4; // кол-во элементов
+  carouselLength = this.slides.length < 20 ? 20 : this.slides.length; // кол-во элементов
   currentValue = null;
   stepMax = 30;
   speed = 6;
@@ -35,7 +35,7 @@ export class Carousel5Component implements OnInit {
   carouselBatch$ = new BehaviorSubject<Carousel[][]>([]);
   stop$: Observable<null>;
   width: number;
-  widthStep: number;
+  widthStep: number = 1;
   @ViewChild('container', {static: true}) container: ElementRef;
   constructor() {
     this.tl = new TimelineMax(
@@ -44,13 +44,13 @@ export class Carousel5Component implements OnInit {
   }
 
   init(){
-    this.width = this.container.nativeElement.offsetWidth;
-    this.widthStep = Math.round((this.width - (this.carouselLength * 100)) / (this.carouselLength - 1));
-    console.log(this.widthStep);
+    // this.width = this.container.nativeElement.offsetWidth;
+    // this.widthStep = Math.round((this.width - (this.carouselLength * 100)) / (this.carouselLength - 1));
+    this.width = this.carouselLength  * (this.widthStep + 5) - this.widthStep;
     for(let i = 0; i < this.carouselLength; i++){
       this.carousel.push({
         val: this.slides[i % this.slides.length],
-        position: (100 + this.widthStep) * i,
+        position: (5 + this.widthStep) * i,
       });
     }
 
@@ -143,12 +143,12 @@ export class Carousel5Component implements OnInit {
     let menuItems = this.container.nativeElement.querySelectorAll(".batch");
 
     this.tl.set(menuItems[0], {x: 0});
-    this.tl.to(menuItems[0], this.speed, {display: 'block', x:  this.width + this.widthStep, ease: Linear.easeNone});
+    this.tl.to(menuItems[0], this.speed, {display: 'block', x:  this.width + this.widthStep + 'vw', ease: Linear.easeNone});
 
     this.tl.set(menuItems[1], {x: 0}, '-=' + this.speed);
-    this.tl.to(menuItems[1], this.speed * 2, {display: 'block', x:  2 * this.width + 2 * this.widthStep, ease: Linear.easeNone}, '-=' + this.speed);
+    this.tl.to(menuItems[1], this.speed * 2, {display: 'block', x:  2 * this.width + 2 * this.widthStep + 'vw', ease: Linear.easeNone}, '-=' + this.speed);
 
-    this.tl.set(menuItems[0], {x: - (this.width + this.widthStep)}, '-=' + this.speed);
+    this.tl.set(menuItems[0], {x: - (this.width + this.widthStep) + 'vw'}, '-=' + this.speed);
     this.tl.to(menuItems[0], this.speed, {display: 'block', x:  0, ease: Linear.easeNone}, '-=' + this.speed);
 
     for (let i = 0; i < this.carousel.length * 2; i++ ){

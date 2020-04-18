@@ -2,14 +2,14 @@
 <button (click)="stop()">stop</button>
 <button (click)="start()">start</button>
 <div #container class="carousel">
-    <div class="set" [ngStyle]="{'left': (carouselLength -1) / 2 * (widthStep + 100) + 'px'}">{{currentValue}}</div>
-    <div class="batch" *ngFor="let carousel of carouselBatch$ | async; index as i;" [ngStyle]="{'left': -i * (width + widthStep) + 'px'}">
-        <div *ngFor="let slide of carousel" class="div" [ngStyle]="{'left': slide.position + 'px'}">
+    <div class="set" [ngStyle]="{'left': 8 * (widthStep + 5) + 'vw'}">{{currentValue}}</div>
+    <div class="batch" *ngFor="let carousel of carouselBatch$ | async; index as i;" [ngStyle]="{'left': -i * (width + widthStep) + 'vw'}">
+        <div *ngFor="let slide of carousel" class="div" [ngStyle]="{'left': slide.position + 'vw'}">
             {{slide.val}}
         </div>
         {{log()}}
     </div>
-<!--    {{animate()}}-->
+    {{animate()}}
 </div>
 
 <!--<button (click)="testRun(test)">test</button>-->
