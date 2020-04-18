@@ -1,0 +1,21 @@
+<!--{{this.forcePosition$ | async}}{{this.stop$ | async}}-->
+<button (click)="stop()">stop</button>
+<button (click)="start()">start</button>
+<div #container class="carousel">
+    <div class="set" [ngStyle]="{'left': (carouselLength -1) / 2 * (widthStep + 100) + 'px'}"></div>
+    <div class="batch" *ngFor="let carousel of carouselBatch; trackBy: trackBy; index as i; let last = last" [ngStyle]="{'left': -i * (width + widthStep) + 'px'}">
+        <div *ngFor="let slide of carousel" class="div" [ngStyle]="{'left': slide.position + 'px'}">
+            {{slide.val}}
+        </div>
+        <ng-container *ngIf="last">{{animate()}}</ng-container>
+    </div>
+</div>
+
+<!--<button (click)="testRun(test)">test</button>-->
+
+<!--<div style="position: relative">-->
+<!--<div class="test" style="position: absolute" #test>-->
+<!--    {{testRun(test)}}-->
+<!--    test-->
+<!--</div>-->
+<!--</div>-->
