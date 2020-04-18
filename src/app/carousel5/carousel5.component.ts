@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {BehaviorSubject, Observable, of, throwError} from "rxjs";
 import {testAnimation} from "../caurosel/caurosel-animation";
 import {Linear, TimelineMax} from "gsap";
@@ -17,17 +17,35 @@ interface Carousel {
 })
 export class Carousel5Component implements OnInit {
   slides = [
-    0,
-    1,
-    2,
-    3,
+      0,
+      1,
+      2,
+      3,
+      4,
+      // 5,
+      // 6,
+      // 7,
+      // 8,
+      // 9,
+      // 10,
+      // 11,
+      // 12,
+      // 13,
+      // 14,
+      // 15,
+      // 16,
+      // 17,
+      // 18,
+      // 19,
+      // 20,
+      // 21,
   ];
   tl: TimelineMax;
   offset = 300; // Длинна карусели
-  carouselLength = this.slides.length < 20 ? 20 : this.slides.length; // кол-во элементов
-  currentValue = null;
+  carouselLength = this.slides.length < 20 ? Math.ceil(20 / this.slides.length) * this.slides.length : this.slides.length; // кол-во элементов
+  currentValue: {val: any} = {val: null};
   stepMax = 30;
-  speed = 6;
+  speed = 25;
   step = this.stepMax;
   when_certain_condition = false;
   forcePosition$: Observable<null>;
@@ -35,9 +53,13 @@ export class Carousel5Component implements OnInit {
   carouselBatch$ = new BehaviorSubject<Carousel[][]>([]);
   stop$: Observable<null>;
   width: number;
+  initAnim = false;
   widthStep: number = 1;
   @ViewChild('container', {static: true}) container: ElementRef;
-  constructor() {
+  private stopVar = false;
+  constructor(
+      private cdr:ChangeDetectorRef,
+  ) {
     this.tl = new TimelineMax(
         {repeat: -1}
         );
@@ -128,10 +150,13 @@ export class Carousel5Component implements OnInit {
     // this.tl.add(() => {
     //   console.log("val4")
     // }, "val4");
+    // this.tl.timeScale(this.tl.timeScale() - 0.1);
+    this.stopVar = true;
   }
 
   start() {
-    this.tl.timeScale(this.tl.timeScale() + 0.1);
+    this.stopVar = false;
+    this.tl.play();
   }
 
   trackBy(index, item){
@@ -139,6 +164,9 @@ export class Carousel5Component implements OnInit {
   }
 
   animate(position = this.widthStep + 100) {
+    if(this.initAnim){
+      return;
+    }
     console.log("anim");
     let menuItems = this.container.nativeElement.querySelectorAll(".batch");
 
@@ -152,11 +180,17 @@ export class Carousel5Component implements OnInit {
     this.tl.to(menuItems[0], this.speed, {display: 'block', x:  0, ease: Linear.easeNone}, '-=' + this.speed);
 
     for (let i = 0; i < this.carousel.length * 2; i++ ){
-      this.tl.call(() => {
-        this.currentValue = this.carousel[i % this.carousel.length].val;
-        console.log(this.carousel[i % this.carousel.length]);
-      }, [],  this.speed / this.carousel.length * i);
+      this.tl.call((position) => {
+        // console.log((this.carousel.length * 2 - i + 7) % (this.carousel.length))
+        this.currentValue.val = this.carousel[(this.carousel.length * 2 - i + 8) % (this.carousel.length)].val;
+        if(this.stopVar && this.currentValue.val === 3){
+          this.tl.tweenTo(position);
+        }
+        this.cdr.detectChanges();
+        // console.log(this.carousel[i % this.carousel.length]);
+      }, [this.speed / this.carousel.length * i],  this.speed / this.carousel.length * i);
     }
+    this.initAnim = true;
     //
     // for (let i = 0; i < this.carousel.length; i++ ){
     //   this.tl.call(() => {
