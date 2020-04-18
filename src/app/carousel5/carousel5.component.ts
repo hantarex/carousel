@@ -2,6 +2,7 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnIni
 import {BehaviorSubject, Observable, of, throwError} from "rxjs";
 import {testAnimation} from "../caurosel/caurosel-animation";
 import {Linear, TimelineMax} from "gsap";
+import {concatMap, delay, flatMap, retry} from "rxjs/operators";
 interface Carousel {
   val: any;
   position: number
@@ -45,13 +46,14 @@ export class Carousel5Component implements OnInit {
   carouselLength = this.slides.length < 20 ? Math.ceil(20 / this.slides.length) * this.slides.length : this.slides.length; // кол-во элементов
   currentValue: {val: any} = {val: null};
   stepMax = 30;
-  speed = 25;
+  speed = 2;
   step = this.stepMax;
   when_certain_condition = false;
   forcePosition$: Observable<null>;
   carousel: Carousel[] = [];
   carouselBatch$ = new BehaviorSubject<Carousel[][]>([]);
   stop$: Observable<null>;
+  start$: Observable<null>;
   width: number;
   initAnim = false;
   widthStep: number = 1;
@@ -138,25 +140,36 @@ export class Carousel5Component implements OnInit {
   }
 
   stop() {
-    // this.tl.add(() => {
-    //   console.log("val1")
-    // }, "val1");
-    // this.tl.add(() => {
-    //   console.log("val2")
-    // }, "val2");
-    // this.tl.add(() => {
-    //   console.log("val3")
-    // }, "val3");
-    // this.tl.add(() => {
-    //   console.log("val4")
-    // }, "val4");
-    // this.tl.timeScale(this.tl.timeScale() - 0.1);
-    this.stopVar = true;
+    this.stop$ = of([]).pipe(
+        concatMap( item => of(item).pipe ( delay( 100 ) )),
+        flatMap(v => {
+          if (this.tl.timeScale() > 0.1) {
+            this.tl.timeScale(this.tl.timeScale() - 0.01);
+            return throwError('retry');
+          } else {
+            this.stopVar = true;
+            return of(null);
+          }
+        }),
+        retry(),
+    );
   }
 
   start() {
     this.stopVar = false;
     this.tl.play();
+    this.start$ = of([]).pipe(
+        concatMap( item => of(item).pipe ( delay( 100 ) )),
+        flatMap(v => {
+          if (this.tl.timeScale() < 1) {
+            this.tl.timeScale(this.tl.timeScale() + 0.01);
+            return throwError('retry');
+          } else {
+            return of(null);
+          }
+        }),
+        retry(),
+    );
   }
 
   trackBy(index, item){
@@ -184,7 +197,7 @@ export class Carousel5Component implements OnInit {
         // console.log((this.carousel.length * 2 - i + 7) % (this.carousel.length))
         this.currentValue.val = this.carousel[(this.carousel.length * 2 - i + 8) % (this.carousel.length)].val;
         if(this.stopVar && this.currentValue.val === 3){
-          this.tl.tweenTo(position);
+          this.tl.timeScale(0);
         }
         this.cdr.detectChanges();
         // console.log(this.carousel[i % this.carousel.length]);
