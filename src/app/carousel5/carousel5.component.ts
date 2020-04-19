@@ -182,6 +182,8 @@ export class Carousel5Component implements OnInit {
 
   start() {
     this.stopVar = false;
+    this.startCountdown = false;
+    this.startCountDown$.next(false);
     this.tl.play();
     this.start$ = of([]).pipe(
         concatMap( item => of(item).pipe ( delay( 100 ) )),
