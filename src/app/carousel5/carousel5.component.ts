@@ -1,8 +1,8 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {BehaviorSubject, Observable, of, throwError} from "rxjs";
+import {BehaviorSubject, combineLatest, Observable, of, throwError} from "rxjs";
 import {testAnimation} from "../caurosel/caurosel-animation";
 import {Linear, TimelineMax} from "gsap";
-import {concatMap, delay, flatMap, retry} from "rxjs/operators";
+import {concatMap, delay, filter, flatMap, retry, tap} from "rxjs/operators";
 interface Carousel {
   val: any;
   position: number
@@ -41,12 +41,16 @@ export class Carousel5Component implements OnInit {
       // 20,
       // 21,
   ];
+  startCountdown = false;
+  beginCountdown = false;
   tl: TimelineMax;
   offset = 300; // Длинна карусели
   carouselLength = this.slides.length < 20 ? Math.ceil(20 / this.slides.length) * this.slides.length : this.slides.length; // кол-во элементов
   currentValue: {val: any} = {val: null};
   stepMax = 30;
   speed = 2;
+  startCountDown$ = new BehaviorSubject<boolean>(false);
+  carouselSlowStop$: Observable<null>;
   step = this.stepMax;
   when_certain_condition = false;
   forcePosition$: Observable<null>;
@@ -65,6 +69,26 @@ export class Carousel5Component implements OnInit {
     this.tl = new TimelineMax(
         {repeat: -1}
         );
+    this.carouselSlowStop$ = this.startCountDown$.pipe(
+        filter(val => val),
+        tap(() => {console.log("start slow stop")}),
+        concatMap( item => of(item).pipe ( delay( 500 ) )),
+        flatMap(v => {
+          if (this.tl.timeScale() > 0.03) {
+            this.tl.timeScale(this.tl.timeScale()-0.01);
+            return throwError('retry');
+          } else {
+            this.stopVar = true;
+            return of(null);
+          }
+        }),
+        retry(),
+    )
+  }
+
+  fnSlow(x:number){
+    console.log(x, x*x);
+    return x*x;
   }
 
   init(){
@@ -140,19 +164,20 @@ export class Carousel5Component implements OnInit {
   }
 
   stop() {
-    this.stop$ = of([]).pipe(
-        concatMap( item => of(item).pipe ( delay( 100 ) )),
-        flatMap(v => {
-          if (this.tl.timeScale() > 0.1) {
-            this.tl.timeScale(this.tl.timeScale() - 0.01);
-            return throwError('retry');
-          } else {
-            this.stopVar = true;
-            return of(null);
-          }
-        }),
-        retry(),
-    );
+    this.startCountdown = true;
+    // this.stop$ = of([]).pipe(
+    //     concatMap( item => of(item).pipe ( delay( 100 ) )),
+    //     flatMap(v => {
+    //       if (this.tl.timeScale() > 0.1) {
+    //         this.tl.timeScale(this.tl.timeScale() - 0.01);
+    //         return throwError('retry');
+    //       } else {
+    //         this.stopVar = true;
+    //         return of(null);
+    //       }
+    //     }),
+    //     retry(),
+    // );
   }
 
   start() {
@@ -194,8 +219,14 @@ export class Carousel5Component implements OnInit {
 
     for (let i = 0; i < this.carousel.length * 2; i++ ){
       this.tl.call((position) => {
+
         // console.log((this.carousel.length * 2 - i + 7) % (this.carousel.length))
         this.currentValue.val = this.carousel[(this.carousel.length * 2 - i + 8) % (this.carousel.length)].val;
+        if(this.startCountdown && !this.startCountDown$.value){
+          let startVal = Math.ceil(105 * 5 / this.carousel.length * 2) % 3;
+          if(this.currentValue.val === startVal)
+            this.startCountDown$.next(true);
+        }
         if(this.stopVar && this.currentValue.val === 3){
           this.tl.timeScale(0);
         }
