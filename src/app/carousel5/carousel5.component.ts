@@ -51,6 +51,44 @@ export class Carousel5Component implements OnInit {
   constructor(
       private cdr:ChangeDetectorRef,
   ) {
+    let start$ = of([]).pipe(
+        concatMap( item => of(item).pipe ( delay( 100 ) )),
+        flatMap(v => {
+          if (this.tl.timeScale() < 0.98) {
+            this.timeScale+=0.01;
+            this.tl.timeScale(this.timeScale);
+            return throwError('retry');
+          } else {
+            this.timeScale = 1;
+            this.tl.timeScale(this.timeScale);
+            return of(null);
+          }
+        }),
+        retry(),
+    );
+    let stop$ = this.startCountDown$.pipe(
+        filter(val => val),
+        tap(() => {
+          if(this.timeScale === 1){
+            this.timeScale-=0.01;
+            this.tl.timeScale(this.timeScale);
+            console.log("aaaa");
+          }
+        }),
+        concatMap( item => of(item).pipe ( delay( this.delay ) )),
+        flatMap(v => {
+          if (this.timeScale > 0.03) {
+            this.timeScale-=0.01;
+            this.tl.timeScale(this.timeScale);
+            return throwError('retry');
+          } else {
+            this.stopVar = true;
+            return of(null);
+          }
+        }),
+        retry(),
+    );
+
     this.runCarousel$ = this.startCarousel$.pipe(
         filter(val => val !== null),
         tap(val => {
@@ -61,52 +99,15 @@ export class Carousel5Component implements OnInit {
         this.stopVar = false;
         this.startCountdown = false;
         this.startCountDown$.next(false);
-        this.tl.play();
-        return of([]).pipe(
-            concatMap( item => of(item).pipe ( delay( 100 ) )),
-            flatMap(v => {
-              if (this.tl.timeScale() < 0.98) {
-                this.timeScale+=0.01;
-                this.tl.timeScale(this.timeScale);
-                return throwError('retry');
-              } else {
-                this.timeScale = 1;
-                this.tl.timeScale(this.timeScale);
-                return of(null);
-              }
-            }),
-            retry(),
-        );
+        return start$;
       }),
       delay(1000),
-        tap(() => {
-          console.log(this.tl.timeScale());
-          this.startCountdown = true;
-        }),
+      tap(() => {
+        this.startCountdown = true;
+      }),
       concatMap(() => {
         this.startCountdown = true;
-        return this.startCountDown$.pipe(
-            filter(val => val),
-            tap(() => {
-              if(this.timeScale === 1){
-                this.timeScale-=0.01;
-                this.tl.timeScale(this.timeScale);
-                console.log("aaaa");
-              }
-            }),
-            concatMap( item => of(item).pipe ( delay( this.delay ) )),
-            flatMap(v => {
-              if (this.timeScale > 0.03) {
-                this.timeScale-=0.01;
-                this.tl.timeScale(this.timeScale);
-                return throwError('retry');
-              } else {
-                this.stopVar = true;
-                return of(null);
-              }
-            }),
-            retry(),
-        );
+        return stop$;
       })
     );
 
