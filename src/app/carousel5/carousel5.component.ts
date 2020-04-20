@@ -2,7 +2,7 @@ import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnIni
 import {BehaviorSubject, combineLatest, Observable, of, throwError} from "rxjs";
 import {testAnimation} from "../caurosel/caurosel-animation";
 import {Linear, TimelineMax} from "gsap";
-import {concatMap, delay, filter, flatMap, retry, tap} from "rxjs/operators";
+import {concatMap, delay, filter, first, flatMap, retry, tap} from "rxjs/operators";
 interface Carousel {
   val: any;
   position: number
@@ -17,35 +17,13 @@ interface Carousel {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Carousel5Component implements OnInit {
-  slides = [
-      0,
-      1,
-      2,
-      3,
-      4,
-      // 5,
-      // 6,
-      // 7,
-      // 8,
-      // 9,
-      // 10,
-      // 11,
-      // 12,
-      // 13,
-      // 14,
-      // 15,
-      // 16,
-      // 17,
-      // 18,
-      // 19,
-      // 20,
-      // 21,
-  ];
+  slides = [];
+  target = 1;
   startCountdown = false;
   beginCountdown = false;
   tl: TimelineMax;
   offset = 300; // Длинна карусели
-  carouselLength = this.slides.length < 20 ? Math.ceil(20 / this.slides.length) * this.slides.length : this.slides.length; // кол-во элементов
+  carouselLength: number;
   currentValue: {val: any} = {val: null};
   stepMax = 30;
   speed = 2;
@@ -59,20 +37,33 @@ export class Carousel5Component implements OnInit {
   stop$: Observable<null>;
   start$: Observable<null>;
   width: number;
+  delay = 500;
   initAnim = false;
   widthStep: number = 1;
+  s = null;
+  counter = 0;
   @ViewChild('container', {static: true}) container: ElementRef;
   private stopVar = false;
+  private startFrom: number;
   constructor(
       private cdr:ChangeDetectorRef,
   ) {
+    for(let i = 0; i < 30; i ++){
+      this.slides.push(i);
+    }
+    this.carouselLength = this.slides.length < 20 ? Math.ceil(20 / this.slides.length) * this.slides.length : this.slides.length; // кол-во элементов
     this.tl = new TimelineMax(
         {repeat: -1}
         );
     this.carouselSlowStop$ = this.startCountDown$.pipe(
         filter(val => val),
-        tap(() => {console.log("start slow stop")}),
-        concatMap( item => of(item).pipe ( delay( 500 ) )),
+        tap(() => {
+          if(this.tl.timeScale() === 1){
+            this.tl.timeScale(this.tl.timeScale()-0.01);
+            console.log("aaaa");
+          }
+        }),
+        concatMap( item => of(item).pipe ( delay( this.delay ) )),
         flatMap(v => {
           if (this.tl.timeScale() > 0.03) {
             this.tl.timeScale(this.tl.timeScale()-0.01);
@@ -83,7 +74,13 @@ export class Carousel5Component implements OnInit {
           }
         }),
         retry(),
-    )
+    );
+    let v0 = (this.carouselLength * 2) / (this.speed * 2);
+    let a = ((v0 - v0 * 0.01) - v0) / (this.delay / 1000);
+    this.s = Math.floor(v0 * (this.delay / 1000) * 97 + a * Math.pow ((this.delay / 1000) * 97, 2) / 2);
+    let startKey = this.carouselLength - this.s % (this.carouselLength * 2);
+    this.startFrom = ((this.carouselLength + this.target + 1) - startKey - 2) % this.carouselLength;
+    console.log(this.carouselLength, v0, a, this.s, startKey, this.startFrom);
   }
 
   fnSlow(x:number){
@@ -221,15 +218,21 @@ export class Carousel5Component implements OnInit {
 
     for (let i = 0; i < this.carousel.length * 2; i++ ){
       this.tl.call((position) => {
-
         // console.log((this.carousel.length * 2 - i + 7) % (this.carousel.length))
         this.currentValue.val = this.carousel[(this.carousel.length * 2 - i + 8) % (this.carousel.length)].val;
         if(this.startCountdown && !this.startCountDown$.value){
-          let startVal = Math.ceil(105 * 5 / this.carousel.length * 2) % 3;
-          if(this.currentValue.val === startVal)
+          // let startVal = Math.ceil(99 / 2 / 4) % this.target * 2;
+          // let startVal = parseInt(this.s) / Math.ceil(this.carouselLength * 2);
+          if(this.currentValue.val === this.carousel[this.startFrom].val) {
+            console.log("start ", this.currentValue.val);
             this.startCountDown$.next(true);
+          }
         }
-        if(this.stopVar && this.currentValue.val === 3){
+        if(this.tl.timeScale() < 100 && this.tl.timeScale() > 0.02 && this.startCountDown$.value){
+          this.counter++;
+          console.log(this.counter, this.currentValue.val);
+        }
+        if(this.stopVar && this.currentValue.val === this.target){
           this.tl.timeScale(0);
         }
         this.cdr.detectChanges();
