@@ -2,8 +2,10 @@
 {{this.stop$ | async}}
 {{this.start$ | async}}
 {{this.carouselSlowStop$ | async}}
+{{runCarousel$ | async}}
 <button (click)="stop()">stop</button>
 <button (click)="start()">start</button>
+<button (click)="newStart()">newStart</button>
 <div #container class="carousel">
     <div class="set" [ngStyle]="{'left': 8 * (widthStep + 5) + 'vw'}">{{currentValue?.val}}</div>
     <div class="batch" *ngFor="let carousel of carouselBatch$ | async; index as i;" [ngStyle]="{'left': -i * (width + widthStep) + 'vw'}">

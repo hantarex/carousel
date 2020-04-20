@@ -42,6 +42,8 @@ export class Carousel5Component implements OnInit {
   initAnim = false;
   widthStep: number = 1;
   s = null;
+  startCarousel$ = new BehaviorSubject(null);
+  runCarousel$: Observable<null>;
   counter = 0;
   @ViewChild('container', {static: true}) container: ElementRef;
   private stopVar = false;
@@ -49,6 +51,65 @@ export class Carousel5Component implements OnInit {
   constructor(
       private cdr:ChangeDetectorRef,
   ) {
+    this.runCarousel$ = this.startCarousel$.pipe(
+        filter(val => val !== null),
+        tap(val => {
+          this.timeScale = 0;
+          console.log("new start ", val, this.tl.timeScale());
+        }),
+      concatMap(() => {
+        this.stopVar = false;
+        this.startCountdown = false;
+        this.startCountDown$.next(false);
+        this.tl.play();
+        return of([]).pipe(
+            concatMap( item => of(item).pipe ( delay( 100 ) )),
+            flatMap(v => {
+              if (this.tl.timeScale() < 0.98) {
+                this.timeScale+=0.01;
+                this.tl.timeScale(this.timeScale);
+                return throwError('retry');
+              } else {
+                this.timeScale = 1;
+                this.tl.timeScale(this.timeScale);
+                return of(null);
+              }
+            }),
+            retry(),
+        );
+      }),
+      delay(1000),
+        tap(() => {
+          console.log(this.tl.timeScale());
+          this.startCountdown = true;
+        }),
+      concatMap(() => {
+        this.startCountdown = true;
+        return this.startCountDown$.pipe(
+            filter(val => val),
+            tap(() => {
+              if(this.timeScale === 1){
+                this.timeScale-=0.01;
+                this.tl.timeScale(this.timeScale);
+                console.log("aaaa");
+              }
+            }),
+            concatMap( item => of(item).pipe ( delay( this.delay ) )),
+            flatMap(v => {
+              if (this.timeScale > 0.03) {
+                this.timeScale-=0.01;
+                this.tl.timeScale(this.timeScale);
+                return throwError('retry');
+              } else {
+                this.stopVar = true;
+                return of(null);
+              }
+            }),
+            retry(),
+        );
+      })
+    );
+
     for(let i = 0; i < 5; i ++){
       this.slides.push(i);
     }
@@ -56,28 +117,28 @@ export class Carousel5Component implements OnInit {
     this.tl = new TimelineMax(
         {repeat: -1}
         );
-    this.carouselSlowStop$ = this.startCountDown$.pipe(
-        filter(val => val),
-        tap(() => {
-          if(this.timeScale === 1){
-            this.timeScale-=0.01;
-            this.tl.timeScale(this.timeScale);
-            console.log("aaaa");
-          }
-        }),
-        concatMap( item => of(item).pipe ( delay( this.delay ) )),
-        flatMap(v => {
-          if (this.timeScale > 0.03) {
-            this.timeScale-=0.01;
-            this.tl.timeScale(this.timeScale);
-            return throwError('retry');
-          } else {
-            this.stopVar = true;
-            return of(null);
-          }
-        }),
-        retry(),
-    );
+    // this.carouselSlowStop$ = this.startCountDown$.pipe(
+    //     filter(val => val),
+    //     tap(() => {
+    //       if(this.timeScale === 1){
+    //         this.timeScale-=0.01;
+    //         this.tl.timeScale(this.timeScale);
+    //         console.log("aaaa");
+    //       }
+    //     }),
+    //     concatMap( item => of(item).pipe ( delay( this.delay ) )),
+    //     flatMap(v => {
+    //       if (this.timeScale > 0.03) {
+    //         this.timeScale-=0.01;
+    //         this.tl.timeScale(this.timeScale);
+    //         return throwError('retry');
+    //       } else {
+    //         this.stopVar = true;
+    //         return of(null);
+    //       }
+    //     }),
+    //     retry(),
+    // );
     let v0 = (this.carouselLength * 2) / (this.speed * 2);
     let a = ((v0 - v0 * 0.01) - v0) / (this.delay / 1000);
     this.s = Math.floor(v0 * (this.delay / 1000) * 97 + a * Math.pow ((this.delay / 1000) * 97, 2) / 2);
@@ -221,6 +282,7 @@ export class Carousel5Component implements OnInit {
 
     this.tl.set(menuItems[0], {x: - (this.width + this.widthStep) + 'vw'}, '-=' + this.speed);
     this.tl.to(menuItems[0], this.speed, {display: 'block', x:  0, ease: Linear.easeNone}, '-=' + this.speed);
+    this.tl.timeScale(0);
 
     for (let i = 0; i < this.carousel.length * 2; i++ ){
       this.tl.call((position) => {
@@ -264,5 +326,9 @@ export class Carousel5Component implements OnInit {
 
   log() {
     console.log("log ", this.tl.timeScale());
+  }
+
+  newStart() {
+    this.startCarousel$.next(1);
   }
 }
