@@ -37,6 +37,7 @@ export class Carousel5Component implements OnInit {
   stop$: Observable<null>;
   start$: Observable<null>;
   width: number;
+  timeScale = 1;
   delay = 500;
   initAnim = false;
   widthStep: number = 1;
@@ -48,7 +49,7 @@ export class Carousel5Component implements OnInit {
   constructor(
       private cdr:ChangeDetectorRef,
   ) {
-    for(let i = 0; i < 30; i ++){
+    for(let i = 0; i < 5; i ++){
       this.slides.push(i);
     }
     this.carouselLength = this.slides.length < 20 ? Math.ceil(20 / this.slides.length) * this.slides.length : this.slides.length; // кол-во элементов
@@ -58,15 +59,17 @@ export class Carousel5Component implements OnInit {
     this.carouselSlowStop$ = this.startCountDown$.pipe(
         filter(val => val),
         tap(() => {
-          if(this.tl.timeScale() === 1){
-            this.tl.timeScale(this.tl.timeScale()-0.01);
+          if(this.timeScale === 1){
+            this.timeScale-=0.01;
+            this.tl.timeScale(this.timeScale);
             console.log("aaaa");
           }
         }),
         concatMap( item => of(item).pipe ( delay( this.delay ) )),
         flatMap(v => {
-          if (this.tl.timeScale() > 0.03) {
-            this.tl.timeScale(this.tl.timeScale()-0.01);
+          if (this.timeScale > 0.03) {
+            this.timeScale-=0.01;
+            this.tl.timeScale(this.timeScale);
             return throwError('retry');
           } else {
             this.stopVar = true;
@@ -185,10 +188,13 @@ export class Carousel5Component implements OnInit {
     this.start$ = of([]).pipe(
         concatMap( item => of(item).pipe ( delay( 100 ) )),
         flatMap(v => {
-          if (this.tl.timeScale() < 1) {
-            this.tl.timeScale(this.tl.timeScale() + 0.01);
+          if (this.tl.timeScale() < 0.98) {
+            this.timeScale+=0.01;
+            this.tl.timeScale(this.timeScale);
             return throwError('retry');
           } else {
+            this.timeScale = 1;
+            this.tl.timeScale(this.timeScale);
             return of(null);
           }
         }),
@@ -228,12 +234,13 @@ export class Carousel5Component implements OnInit {
             this.startCountDown$.next(true);
           }
         }
-        if(this.tl.timeScale() < 100 && this.tl.timeScale() > 0.02 && this.startCountDown$.value){
+        if(this.timeScale < 100 && this.timeScale > 0.02 && this.startCountDown$.value){
           this.counter++;
           console.log(this.counter, this.currentValue.val);
         }
         if(this.stopVar && this.currentValue.val === this.target){
-          this.tl.timeScale(0);
+          this.timeScale = 0;
+          this.tl.timeScale(this.timeScale);
         }
         this.cdr.detectChanges();
         // console.log(this.carousel[i % this.carousel.length]);
@@ -256,6 +263,6 @@ export class Carousel5Component implements OnInit {
   }
 
   log() {
-    console.log("log");
+    console.log("log ", this.tl.timeScale());
   }
 }
