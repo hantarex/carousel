@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {BehaviorSubject, combineLatest, Observable, of, throwError} from "rxjs";
 import {testAnimation} from "../caurosel/caurosel-animation";
-import {Linear, TimelineMax} from "gsap";
+import {Linear, TimelineMax, Bounce, TweenLite, TimelineLite, Power4} from "gsap";
 import {concatMap, delay, filter, first, flatMap, retry, tap} from "rxjs/operators";
 interface Carousel {
   val: any;
@@ -21,12 +21,12 @@ export class Carousel5Component implements OnInit {
   target = 1;
   startCountdown = false;
   beginCountdown = false;
-  tl: TimelineMax;
+  tl: TimelineLite;
   offset = 300; // Длинна карусели
   carouselLength: number;
   currentValue: {val: any} = {val: null};
   stepMax = 30;
-  speed = 2;
+  speed = 5;
   startCountDown$ = new BehaviorSubject<boolean>(false);
   carouselSlowStop$: Observable<null>;
   step = this.stepMax;
@@ -115,7 +115,7 @@ export class Carousel5Component implements OnInit {
       this.slides.push(i);
     }
     this.carouselLength = this.slides.length < 20 ? Math.ceil(20 / this.slides.length) * this.slides.length : this.slides.length; // кол-во элементов
-    this.tl = new TimelineMax(
+    this.tl = new TimelineLite(
         {repeat: -1}
         );
     // this.carouselSlowStop$ = this.startCountDown$.pipe(
@@ -272,43 +272,44 @@ export class Carousel5Component implements OnInit {
     if(this.initAnim){
       return;
     }
-    console.log("anim");
     let menuItems = this.container.nativeElement.querySelectorAll(".batch");
+    this.tl.set(menuItems[0], {x: 0})
+        .to(menuItems[0], this.speed, {x:  this.width + this.widthStep + 'vw', ease: Linear.easeNone})
+        .add("one")
 
-    this.tl.set(menuItems[0], {x: 0});
-    this.tl.to(menuItems[0], this.speed, {display: 'block', x:  this.width + this.widthStep + 'vw', ease: Linear.easeNone});
+        .set(menuItems[1], {x: 0}, 0)
+        .to(menuItems[1], this.speed * 2, {x:  2 * this.width + 2 * this.widthStep + 'vw', ease: Linear.easeNone}, 0)
 
-    this.tl.set(menuItems[1], {x: 0}, '-=' + this.speed);
-    this.tl.to(menuItems[1], this.speed * 2, {display: 'block', x:  2 * this.width + 2 * this.widthStep + 'vw', ease: Linear.easeNone}, '-=' + this.speed);
+        .set(menuItems[0], {x: - (this.width + this.widthStep) + 'vw'}, "one")
+        .to(menuItems[0], this.speed, {display: 'block', x:  0, ease: Linear.easeNone}, "one");
 
-    this.tl.set(menuItems[0], {x: - (this.width + this.widthStep) + 'vw'}, '-=' + this.speed);
-    this.tl.to(menuItems[0], this.speed, {display: 'block', x:  0, ease: Linear.easeNone}, '-=' + this.speed);
-    this.tl.timeScale(0);
+    TweenLite.to(this.tl, 5, {timeScale:0, ease: Linear.ease});
 
-    for (let i = 0; i < this.carousel.length * 2; i++ ){
-      this.tl.call((position) => {
-        // console.log((this.carousel.length * 2 - i + 7) % (this.carousel.length))
-        this.currentValue.val = this.carousel[(this.carousel.length * 2 - i + 8) % (this.carousel.length)].val;
-        if(this.startCountdown && !this.startCountDown$.value){
-          // let startVal = Math.ceil(99 / 2 / 4) % this.target * 2;
-          // let startVal = parseInt(this.s) / Math.ceil(this.carouselLength * 2);
-          if(this.currentValue.val === this.carousel[this.startFrom].val) {
-            console.log("start ", this.currentValue.val);
-            this.startCountDown$.next(true);
-          }
-        }
-        if(this.timeScale < 100 && this.timeScale > 0.02 && this.startCountDown$.value){
-          this.counter++;
-          console.log(this.counter, this.currentValue.val);
-        }
-        if(this.stopVar && this.currentValue.val === this.target){
-          this.timeScale = 0;
-          this.tl.timeScale(this.timeScale);
-        }
-        this.cdr.detectChanges();
-        // console.log(this.carousel[i % this.carousel.length]);
-      }, [this.speed / this.carousel.length * i],  this.speed / this.carousel.length * i);
-    }
+
+    // for (let i = 0; i < this.carousel.length * 2; i++ ){
+    //   this.tl.call((position) => {
+    //     // console.log((this.carousel.length * 2 - i + 7) % (this.carousel.length))
+    //     this.currentValue.val = this.carousel[(this.carousel.length * 2 - i + 8) % (this.carousel.length)].val;
+    //     if(this.startCountdown && !this.startCountDown$.value){
+    //       // let startVal = Math.ceil(99 / 2 / 4) % this.target * 2;
+    //       // let startVal = parseInt(this.s) / Math.ceil(this.carouselLength * 2);
+    //       if(this.currentValue.val === this.carousel[this.startFrom].val) {
+    //         console.log("start ", this.currentValue.val);
+    //         this.startCountDown$.next(true);
+    //       }
+    //     }
+    //     if(this.timeScale < 100 && this.timeScale > 0.02 && this.startCountDown$.value){
+    //       this.counter++;
+    //       console.log(this.counter, this.currentValue.val);
+    //     }
+    //     if(this.stopVar && this.currentValue.val === this.target){
+    //       this.timeScale = 0;
+    //       this.tl.timeScale(this.timeScale);
+    //     }
+    //     this.cdr.detectChanges();
+    //     // console.log(this.carousel[i % this.carousel.length]);
+    //   }, [this.speed / this.carousel.length * i],  this.speed / this.carousel.length * i);
+    // }
     this.initAnim = true;
     //
     // for (let i = 0; i < this.carousel.length; i++ ){

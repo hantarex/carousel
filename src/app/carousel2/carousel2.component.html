@@ -1,8 +1,10 @@
-{{this.forcePosition$ | async}}{{this.stop$ | async}}
+{{this.forcePosition$ | async}}
+{{this.test$ | async}}
 <button (click)="stop()">stop</button>
 <button (click)="start()">start</button>
 <div class="carousel">
-    <ng-container *ngFor="let slide of carousel; index as i">
-        <div class="div" *ngIf="slide.position > 0 - (stepMax + 20) && slide.position < 100 + (stepMax + 20)" [ngStyle]="{'left': slide.position + '%'}">{{slide.val}}</div>
+    <ng-container #test *ngFor="let slide of carousel; trackBy fn; index as i">
+        <div class="div">{{slide.val}}</div>
+        {{log()}}
     </ng-container>
 </div>

@@ -1,6 +1,14 @@
-import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {
+  AfterContentInit,
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  OnInit, QueryList,
+  ViewChild,
+  ViewChildren
+} from '@angular/core';
 import {Observable, of, throwError} from "rxjs";
-import {concatMap, delay, flatMap, retry} from "rxjs/operators";
+import {concatMap, delay, flatMap, retry, tap} from "rxjs/operators";
 
 interface Carousel {
   val: any;
@@ -13,8 +21,7 @@ interface Carousel {
   styleUrls: ['./carousel2.component.sass']
 })
 
-export class Carousel2Component implements OnInit {
-
+export class Carousel2Component implements OnInit, AfterViewInit {
   slides = [
     0,
     1,
@@ -22,6 +29,7 @@ export class Carousel2Component implements OnInit {
     3
   ];
   offset = 300; // Длинна карусели
+  test$: Observable<null>;
   carouselLength = 50;
   stepMax = 30;
   step = this.stepMax;
@@ -33,11 +41,12 @@ export class Carousel2Component implements OnInit {
   constructor(
       private cdr: ChangeDetectorRef,
   ) {
+
     this.init();
     this.forcePosition$ = of([]).pipe(
         concatMap( item => of(item).pipe ( delay( 1000 ) )),
         flatMap(v => {
-          this.reCalcCarousel();
+          // this.reCalcCarousel();
           if (!this.when_certain_condition) {
             return throwError('retry');
           } else {
@@ -58,9 +67,9 @@ export class Carousel2Component implements OnInit {
   }
 
   reCalcCarousel(){
-    this.carousel.map(val => {
-      val.position = this.calcPosition(val.position);
-    })
+    // this.carousel.map(val => {
+    //   val.position = this.calcPosition(val.position);
+    // })
   }
 
   calcPosition(position: number){
@@ -75,21 +84,32 @@ export class Carousel2Component implements OnInit {
   }
 
   stop() {
-    this.stop$ = of([]).pipe(
-        concatMap( item => of(item).pipe ( delay( 1000 ) )),
-        flatMap(v => {
-          if (this.step != 0) {
-            this.step -= 1;
-            return throwError('retry');
-          } else {
-            return null;
-          }
-        }),
-        retry(),
-    );
+    // this.stop$ = of([]).pipe(
+        // concatMap( item => of(item).pipe ( delay( 1000 ) )),
+        // flatMap(v => {
+        //   if (this.step != 0) {
+        //     this.step -= 1;
+        //     return throwError('retry');
+        //   } else {
+        //     return null;
+        //   }
+        // }),
+        // retry(),
+    // );
+  }
+
+  fn(index, item){
+    return index;
   }
 
   start() {
     this.step = 30;
+  }
+
+    log() {
+        console.log("ok");
+    }
+
+  ngAfterViewInit(): void {
   }
 }
