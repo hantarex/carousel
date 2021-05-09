@@ -1,12 +1,16 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {BehaviorSubject, combineLatest, Observable, of, throwError} from "rxjs";
 import {testAnimation} from "../caurosel/caurosel-animation";
-import {Linear, TimelineMax, Bounce, TweenLite, TimelineLite, Power4} from "gsap";
+import {Linear, TimelineMax, Bounce, TweenLite, TimelineLite, Power4, TweenMax} from "gsap";
 import {concatMap, delay, filter, first, flatMap, retry, tap} from "rxjs/operators";
+import "gsap/dist/gsap.min";
+import {CustomEase} from "gsap/CustomEase.js";
+
 interface Carousel {
   val: any;
   position: number
 }
+
 @Component({
   selector: 'app-carousel5',
   templateUrl: './carousel5.component.html',
@@ -273,17 +277,25 @@ export class Carousel5Component implements OnInit {
       return;
     }
     let menuItems = this.container.nativeElement.querySelectorAll(".batch");
-    this.tl.set(menuItems[0], {x: 0})
-        .to(menuItems[0], this.speed, {x:  this.width + this.widthStep + 'vw', ease: Linear.easeNone})
-        .add("one")
+    this.tl
+        .add("zero")
+        .set(menuItems[0], {x: 0}, "zero")
+        .set(menuItems[0], {opacity: 0}, "zero")
+        .add("test")
+        .to(menuItems[0], this.speed, {x:  this.width + this.widthStep + 'vw', ease: Linear.easeNone}, "test")
+        .to(menuItems[0], this.speed, {opacity: 1, ease:
+              CustomEase.create("custom", "M0,0 C0.218,0 0.033,0.212 0.25,0.212 0.424,0.212 0.304,0 0.45,0 0.596,0 0.956,0.001 1,0 ")
+        }, "test")
+        .add("one");
 
-        .set(menuItems[1], {x: 0}, 0)
-        .to(menuItems[1], this.speed * 2, {x:  2 * this.width + 2 * this.widthStep + 'vw', ease: Linear.easeNone}, 0)
+        // .set(menuItems[1], {x: 0}, 0)
+        // .to(menuItems[1], this.speed * 2, {x:  2 * this.width + 2 * this.widthStep + 'vw', ease: Linear.easeNone}, 0)
 
-        .set(menuItems[0], {x: - (this.width + this.widthStep) + 'vw'}, "one")
-        .to(menuItems[0], this.speed, {display: 'block', x:  0, ease: Linear.easeNone}, "one");
+        // .set(menuItems[0], {x: - (this.width + this.widthStep) + 'vw'}, "one")
+        // .to(menuItems[0], this.speed, {display: 'block', x:  0, ease: Linear.easeNone}, "one")
+        // .to(menuItems[0], this.speed, {opacity: 0, ease: Linear.easeNone}, "one");
 
-    TweenLite.to(this.tl, 5, {timeScale:0, ease: Linear.ease});
+    // let tl =TweenLite.to(this.tl, 5, {timeScale:0, ease: Linear.easeNone});
 
 
     // for (let i = 0; i < this.carousel.length * 2; i++ ){
