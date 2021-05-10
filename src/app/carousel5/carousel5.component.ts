@@ -49,7 +49,8 @@ export class Carousel5Component implements OnInit {
   startCarousel$ = new BehaviorSubject(null);
   runCarousel$: Observable<null>;
   counter = 0;
-  @ViewChild('container', {static: true}) container: ElementRef;
+  @ViewChild('container', {static: true}) container: ElementRef<HTMLDivElement>;
+  @ViewChild('batch', {static: true}) batch: ElementRef<HTMLDivElement>;
   private stopVar = false;
   private startFrom: number;
   constructor(
@@ -277,16 +278,26 @@ export class Carousel5Component implements OnInit {
       return;
     }
     let menuItems = this.container.nativeElement.querySelectorAll(".batch");
-    this.tl
-        .add("zero")
-        .set(menuItems[0], {x: 0}, "zero")
-        .set(menuItems[0], {opacity: 0}, "zero")
-        .add("test")
-        .to(menuItems[0], this.speed, {x:  this.width + this.widthStep + 'vw', ease: Linear.easeNone}, "test")
-        .to(menuItems[0], this.speed, {opacity: 1, ease:
-              CustomEase.create("custom", "M0,0 C0.218,0 0.033,0.212 0.25,0.212 0.424,0.212 0.304,0 0.45,0 0.596,0 0.956,0.001 1,0 ")
-        }, "test")
-        .add("one");
+    let cells: NodeListOf<HTMLDivElement> = this.container.nativeElement.querySelectorAll(".batch > .div");
+    // cells.forEach(r => console.log(r));
+    let l = this.batch.nativeElement.offsetWidth;
+    cells[0].style.display = "inline-block";
+    let w_c = cells[0].offsetWidth;
+    let cel =  this.tl
+        .set(cells[0], {x: 0, scale: 1}, 0)
+        .to(cells[0], this.speed,{ x: l - w_c, ease: Power1.easeInOut}, 0)
+        .to(cells[0], this.speed, {scale: 2,  duration: 1}, 0)
+        .to(cells[0], 2.5, {scale: 1, duration: 2.5}, 2.5);
+    // this.tl
+    //     .add("zero")
+    //     .set(menuItems[0], {x: 0}, "zero")
+    //     .set(menuItems[0], {opacity: 0}, "zero")
+    //     .add("test")
+    //     .to(menuItems[0], this.speed, {x:  this.width + this.widthStep + 'vw', ease: Linear.easeNone}, "test")
+    //     .to(menuItems[0], this.speed, {opacity: 1, ease:
+    //           CustomEase.create("custom", "M0,0 C0.218,0 0.033,0.212 0.25,0.212 0.424,0.212 0.304,0 0.45,0 0.596,0 0.956,0.001 1,0 ")
+    //     }, "test")
+    //     .add("one");
 
         // .set(menuItems[1], {x: 0}, 0)
         // .to(menuItems[1], this.speed * 2, {x:  2 * this.width + 2 * this.widthStep + 'vw', ease: Linear.easeNone}, 0)
