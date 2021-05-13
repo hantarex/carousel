@@ -31,3 +31,21 @@
   left: 0;
   border-radius: 0.8rem;
 }
+
+.actions {
+  position: absolute;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+button {
+  display: inline-block;
+  outline: none;
+  border: none;
+  padding: 8px 14px;
+  background: #414141;
+  background-image: -webkit-linear-gradient(top, #575757, #414141);
+  background-image: -moz-linear-gradient(top, #575757, #414141);
+  background-image: -ms-linear-gradient(top, #575757, #414141);
+}
