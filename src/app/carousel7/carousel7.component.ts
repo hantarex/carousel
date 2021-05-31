@@ -1,62 +1,86 @@
 import { Component, OnInit } from '@angular/core';
-import {Linear, TimelineMax, Bounce, TweenLite, TimelineLite, Power4, TweenMax, gsap, Back} from "gsap";
+import {gsap} from "gsap";
 import "gsap/dist/gsap.min";
-import {CustomEase} from "gsap/CustomEase.js";
 @Component({
   selector: 'app-carousel7',
   templateUrl: './carousel7.component.html',
   styleUrls: ['./carousel7.component.sass']
 })
 export class Carousel7Component implements OnInit {
-  tl: TimelineLite;
-  tlScale: TimelineLite;
+  tl: gsap.core.Timeline;
+  startFrom = 6;
+  target = 1;
+  stopped: boolean = false;
+
   constructor() {
-    this.tl = new TimelineLite(
-        {repeat: -1}
-    );
-    this.tlScale = new TimelineLite(
+    this.tl = gsap.timeline(
         {repeat: -1}
     );
   }
 
   ngOnInit(): void {
-    let cells = [];
-    const speed = 1;
+    const speed = 2;
     const padding = 100;
-    for (let i = 10; i >= 1; i--) {
-      cells.push(".box-" + i);
-    }
+    const self = this;
+    const cards = gsap.utils.toArray('.boxes .box');
+    console.log(cards.length);
     this.tl
         .set(".box", {
           x: function(i) {
+            self.tl.call(self.callback, [((cards.length - i)+5) % cards.length + 1], (speed / cards.length)*i + speed + 0.001);
+            self.tl.add("label" + [((cards.length - i)+5) % cards.length + 1], (speed / cards.length)*i + speed + 0.001);
             return i * (50 + padding);
           },
+          opacity: 0,
+          scale: 1
         })
-        .to(".box", speed, {
-          ease: Linear.easeNone,
-          x: "+=" + ((50 + padding)* 10), //move each box 500px to right
-          modifiers: {
-            x: (x, t:HTMLElement) => {
-              return gsap.utils.unitize((x:string) => parseFloat(x) % ((50 + padding)* 10))(x);
-            },
-          },
-          repeat: -1,
-        })
-        .to(".box", speed, {
-          scale: 2,
-          ease: CustomEase.create("custom", "M0,0 C0.126,0.382 0.283,1 0.5,1 0.686,1 0.9,0.346 1,0 "),
+        // .to(".box", {
+        //   ease: "none",
+        //   x: "+=" + ((50 + padding)* cards.length), //move each box 500px to right
+        //   modifiers: {
+        //     x: (x, t:HTMLElement) => {
+        //       return gsap.utils.unitize((x:string) => parseFloat(x) % ((50 + padding)* cards.length))(x);
+        //     },
+        //   },
+        //   duration: speed,
+        //   onRepeat: () => {
+        //     console.log("repeat");
+        //     this.tl.time(speed + 0.001, true);
+        //   },
+        //   repeat: -1,
+        // })
+        .to(".box", {
+          scale: 3,
+          opacity: 1,
+          ease: "power1.in",
           stagger: {
-            amount: speed - speed / 10,
+            amount: speed - speed / cards.length,
             from: "end",
             repeat: -1,
+            yoyo: true
           },
-        }, speed / 10);
-    // this.tl.staggerTo(cells, 10, {
-    //   scale: 2,
-    //   ease: CustomEase.create("custom", "M0,0 C0.126,0.382 0.283,1 0.5,1 0.686,1 0.9,0.346 1,0 "),
-    //   repeat: -1,
-    // }, 1, 1);
+          duration: speed / 2,
+        }, speed / cards.length);
+    let item;
+    for(let i = 0; i < cards.length; i++) {
+      item = cards[i];
+      this.tl.to(item, {
 
+      })
+    }
+
+    this.tl.time(speed, true);
     this.tl.play();
+  }
+
+  callback = (i) => {
+    if(this.stopped && i === this.startFrom) {
+      this.tl.tweenTo("label" + this.target, {duration: 7, ease: "Expo.easeOut"});
+    }
+    console.log(i)
+  }
+
+  test() {
+    this.stopped = true;
   }
 }

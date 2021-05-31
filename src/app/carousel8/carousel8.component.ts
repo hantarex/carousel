@@ -12,11 +12,11 @@ export class Carousel8Component implements OnInit {
   rawSequence: gsap.core.Timeline;
   seamlessLoop: gsap.core.Timeline;
   scrub: gsap.core.Tween;
-  spacing = 0.25;
-  speed = 5;
+  spacing = 0.1;
+  speed = 2;
   onRepeat: boolean = false;
-  target = 15;
-  startFrom = 14;
+  target = 30;
+  startFrom = 29;
   stopped = false;
 
   constructor() {
@@ -32,29 +32,12 @@ export class Carousel8Component implements OnInit {
       ease: "power3",
       paused: true
     });
-    // this.trigger = ScrollTrigger.create({
-    //   start: 0,
-    //   onUpdate: self => {
-    //     console.log(self.progress, self.direction, self.wrapping);
-    //     if (self.progress === 1 && self.direction > 0 && !self.wrapping) {
-    //       this.wrapForward(self);
-    //     } else if (self.progress < 1e-5 && self.direction < 0 && !self.wrapping) {
-    //       this.wrapBackward(self);
-    //     } else {
-    //       this.scrub.vars.totalTime = this.snap((this.iteration + self.progress) * this.seamlessLoop.duration());
-    //       this.scrub.invalidate().restart(); // to improve performance, we just invalidate and restart the same tween. No need for overwrites or creating a new tween on each update.
-    //       self.wrapping = false;
-    //     }
-    //   },
-    //   end: "+=3000",
-    //   pin: ".gallery"
-    // })
   }
 
 
   buildSeamlessLoop(items, spacing) {
     let overlap = Math.ceil(1 / spacing), // number of EXTRA animations on either side of the start/end to accommodate the seamless looping 10
-        startTime = items.length * spacing + 0.5, // the time on the raw Sequence at which we'll start the seamless loop 3.6
+        startTime = items.length * spacing, // the time on the raw Sequence at which we'll start the seamless loop 3.6
         loopTime = (items.length + overlap) * spacing + 1, // the spot at the end where we loop back to the start Time 5.1
         l = items.length + overlap * 2,
         time = 0,
@@ -73,51 +56,59 @@ export class Carousel8Component implements OnInit {
 
     // set initial state of items
     gsap.set(items, {xPercent: 400, opacity: 0,	scale: 0});
-
+    console.log((this.speed / 2) / spacing);
     // now loop through and create all the animations in a staggered fashion. Remember, we must create EXTRA animations at the end to accommodate the seamless looping.
     for (i = 0; i < l; i++) {
       index = i % items.length;
       item = items[index];
       time = i * spacing;
-      console.log((index+5) % items.length, time + this.speed / 2);
-      this.rawSequence.fromTo(item, {scale: 0, opacity: 0}, {scale: 1, opacity: 1, zIndex: 100, duration: this.speed / 4, yoyo: true, repeat: 1, ease: "power1.in", immediateRender: false}, time)
+      // console.log((index+5) % items.length, time + this.speed / 2);
+      this.rawSequence.fromTo(item, {scale: 1, opacity: 1}, {scale: 1, opacity: 1, zIndex: 100, duration: this.speed / 4, yoyo: true, repeat: 1, ease: "power1.in", immediateRender: false}, time)
           .fromTo(item, {xPercent: 400}, {
             xPercent: -400, duration: this.speed / 2, ease: "none", immediateRender: false,
             // onStart: self.callback,
             // onStartParams: [(index+5) % items.length, time]
           }, time)
-          .call(this.callback, [(index+27) % items.length, time], time);
-      i <= items.length && this.seamlessLoop.add("label" + (index+28) % items.length, time); // we don't really need these, but if you wanted to jump to key spots using labels, here ya go.
+          .call(this.callback, [(index - Math.floor(((this.speed / 2) / spacing) / 2) + items.length) % items.length, time], time);
+      i <= items.length && this.seamlessLoop.add("label" + i, time); // we don't really need these, but if you wanted to jump to key spots using labels, here ya go.
     }
     //
     // // here's where we set up the scrubbing of the playhead to make it appear seamless.
     this.rawSequence.time(startTime, true);
-    console.log(loopTime, startTime, overlap * spacing + 1);
-    this.seamlessLoop
-        .call(() => {
-          this.onRepeat = false;
-          console.log("start");
-        })
-        .to(this.rawSequence, {
-          time: loopTime,
-          duration: loopTime - startTime,
-          ease: "none",
-        })
-        .call(() => {
-          this.rawSequence.time(overlap * spacing + 1, true);
-          // this.seamlessLoop.pause();
-        })
-        // .to(this.rawSequence, {
-        //   time: overlap * spacing + 1,
-        //   duration: loopTime - startTime,
-        //   immediateRender: false,
-        // })
-        .fromTo(this.rawSequence, {time: overlap * spacing + 1}, {
-          time: startTime,
-          duration: startTime - (overlap * spacing + 1),
-          immediateRender: false,
-          ease: "none"
-        });
+    // console.log(loopTime, startTime, overlap * spacing + 1);
+    // this.seamlessLoop
+    //     .call(() => {
+    //       this.onRepeat = false;
+    //       console.log("start");
+    //     })
+    //     .to(this.rawSequence, {
+    //       time: loopTime,
+    //       duration: loopTime - startTime,
+    //       ease: "none",
+    //     })
+    //     .call(() => {
+    //       this.rawSequence.time(overlap * spacing + 1, true);
+    //       // this.seamlessLoop.pause();
+    //     })
+    //     // .to(this.rawSequence, {
+    //     //   time: overlap * spacing + 1,
+    //     //   duration: loopTime - startTime,
+    //     //   immediateRender: false,
+    //     // })
+    //     .fromTo(this.rawSequence, {time: overlap * spacing + 1}, {
+    //       time: startTime,
+    //       duration: startTime - (overlap * spacing + 1),
+    //       immediateRender: false,
+    //       ease: "none"
+    //     });
+
+    this.seamlessLoop.tweenTo('label0', {
+      duration: 3,
+      ease: "Expo.easeOut",
+      onComplete: () => {
+        console.log(self.seamlessLoop.time());
+      }
+    });
     return this.seamlessLoop;
   }
 
