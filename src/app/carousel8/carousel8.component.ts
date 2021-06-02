@@ -15,11 +15,11 @@ export class Carousel8Component implements OnInit {
   spacing = 0.1;
   speed = 2;
   onRepeat: boolean = false;
-  target = 0;
+  target = 1;
   listItems: {
     [id: number]: number
   } = {};
-  startFrom = 2;
+  startFrom = 10;
   fullLength: number;
   stopped = false;
   startTime: number;
@@ -59,7 +59,7 @@ export class Carousel8Component implements OnInit {
             self.onRepeat = true;
           },
         });
-
+    window.test = this.seamlessLoop;
     // set initial state of items
     gsap.set(items, {xPercent: 400, opacity: 0,	scale: 0});
     console.log((this.speed / 2) / spacing);
@@ -126,8 +126,9 @@ export class Carousel8Component implements OnInit {
       console.log(i, time, index);
       const startFrom = (this.target + this.cards.length - this.startFrom) % this.cards.length;
       if(this.stopped === true && index === startFrom) {
-        console.log(this.seamlessLoop.time(), this.getNear(this.seamlessLoop.time()), "aaa");
-        this.seamlessLoop.tweenTo('label' + 32, {duration: 10, ease: "Expo.easeOut"});
+        // this.seamlessLoop.pause();
+        console.log(i, index, this.seamlessLoop.time(), "aaa");
+        this.seamlessLoop.tweenTo(this.getNear(this.seamlessLoop.time()), {duration: 8, ease: "Expo.easeOut"});
         this.stopped = false;
       }
     }
@@ -140,15 +141,26 @@ export class Carousel8Component implements OnInit {
   }
 
   private getNear(time: number) {
-    let result = 0 + "";
-     Object.keys(this.listItems).forEach((i) => {
+    let result: number = null;
+    let ff: number = null;
+     Object.keys(this.listItems).some((i) => {
        const v = parseInt(i);
        const t = v % (this.cards.length);
        console.log(i, t, this.target, this.listItems[i], time, "bbb");
-       if (t === this.target && this.listItems[i] < time) {
-         result = i;
+       if (t === this.target) {
+         if(ff === null) ff = this.listItems[i];
+         if(this.listItems[i] > time) {
+           console.log("find", i);
+           result = this.listItems[i];
+           return true;
+         }
        }
+       return false;
      });
-     return result;
+     if(result === null) {
+       result = ff;
+     }
+    console.log("result", result);
+    return result;
   }
 }
